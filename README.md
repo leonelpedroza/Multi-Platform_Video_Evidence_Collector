@@ -3,7 +3,7 @@
 
 ---
 
-## 📋 History
+## 📖 HISTORY
 
 This tool was born out of personal need. A woman I know is being digitally harassed. Lies and false identities have been created against her, along with slanderous accusations. The idea behind its creation is to help gather evidence that can be legally used to prosecute those responsibles.
 
