@@ -3,6 +3,11 @@
 
 ---
 
+## 📋 History
+
+This tool was born out of personal need. A woman I know is being digitally harassed. Lies and false identities have been created against her, along with slanderous accusations. The idea behind its creation is to help gather evidence that can be legally used to prosecute those responsibles.
+
+
 ## 🎯 EXECUTIVE SUMMARY
 
 The Multi-Platform Video Evidence Collector is a specialized forensic tool designed for law enforcement, private investigators, and legal professionals to legally collect, preserve, and document digital video evidence from social media and online platforms. This tool ensures chain of custody, maintains evidence integrity, and generates court-admissible documentation.
