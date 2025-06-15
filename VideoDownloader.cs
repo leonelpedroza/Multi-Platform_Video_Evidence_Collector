@@ -750,14 +750,11 @@ namespace VideoDownloader
             AddToLog($"Evidence folder: {evidenceFolder}");
             statusLabel.Text = "Downloading...";
 
-            // Store the evidence folder path for later use
-            ytDlpProcess.StartInfo.WorkingDirectory = evidenceFolder;
-
             // Run yt-dlp
-            await RunYtDlp(string.Join(" ", arguments));
+            await RunYtDlp(string.Join(" ", arguments), evidenceFolder);
         }
 
-        private async Task RunYtDlp(string arguments)
+        private async Task RunYtDlp(string arguments, string evidenceFolder)
         {
             var tcs = new TaskCompletionSource<bool>();
 
@@ -770,7 +767,8 @@ namespace VideoDownloader
                     UseShellExecute = false,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
-                    CreateNoWindow = true
+                    CreateNoWindow = true,
+                    WorkingDirectory = evidenceFolder
                 }
             };
 
@@ -809,18 +807,18 @@ namespace VideoDownloader
                 // Generate evidence report if enabled
                 if (evidenceReportCheckBox.Checked || hashCheckBox.Checked)
                 {
-                    var downloadedFiles = Directory.GetFiles(ytDlpProcess.StartInfo.WorkingDirectory, "*.*")
+                    var downloadedFiles = Directory.GetFiles(evidenceFolder, "*.*")
                         .Where(f => !f.EndsWith(".json") && !f.EndsWith(".png") && !f.EndsWith(".txt"))
                         .ToList();
                     
                     if (evidenceReportCheckBox.Checked)
                     {
-                        GenerateEvidenceReport(urlTextBox.Text, ytDlpProcess.StartInfo.WorkingDirectory, downloadedFiles);
+                        GenerateEvidenceReport(urlTextBox.Text, evidenceFolder, downloadedFiles);
                     }
                 }
                 
-                AddToHistory(urlTextBox.Text, "Success", ytDlpProcess.StartInfo.WorkingDirectory);
-                MessageBox.Show($"Download completed successfully!\nSaved to: {ytDlpProcess.StartInfo.WorkingDirectory}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                AddToHistory(urlTextBox.Text, "Success", evidenceFolder);
+                MessageBox.Show($"Download completed successfully!\nSaved to: {evidenceFolder}", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             else
             {
