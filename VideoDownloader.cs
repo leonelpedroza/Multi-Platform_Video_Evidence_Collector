@@ -38,6 +38,7 @@ namespace VideoDownloader
         private CheckBox metadataCheckBox;
         private CheckBox timestampCheckBox;
         private CheckBox cookiesCheckBox;
+        private ComboBox browserComboBox;
         private CheckBox screenshotCheckBox;
         private CheckBox hashCheckBox;
         private CheckBox evidenceReportCheckBox;
@@ -61,8 +62,51 @@ namespace VideoDownloader
         private void InitializeComponent()
         {
             this.Text = "Multi-Platform Video Downloader";
-            this.Size = new Size(900, 700);
+            this.Size = new Size(760, 770);
             this.StartPosition = FormStartPosition.CenterScreen;
+            
+            // Set the window icon
+            try
+            {
+                // First try to load from embedded resource
+                var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                var resourceName = "VideoDownloader.app.ico";
+                
+                using (var stream = assembly.GetManifestResourceStream(resourceName))
+                {
+                    if (stream != null)
+                    {
+                        this.Icon = new Icon(stream);
+                    }
+                    else
+                    {
+                        // Try alternate resource name
+                        resourceName = assembly.GetName().Name + ".app.ico";
+                        using (var altStream = assembly.GetManifestResourceStream(resourceName))
+                        {
+                            if (altStream != null)
+                            {
+                                this.Icon = new Icon(altStream);
+                            }
+                        }
+                    }
+                }
+                
+                // If resource loading failed, try loading from file
+                if (this.Icon == null)
+                {
+                    var iconPath = Path.Combine(Path.GetDirectoryName(Application.ExecutablePath), "app.ico");
+                    if (File.Exists(iconPath))
+                    {
+                        this.Icon = new Icon(iconPath);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Icon loading failed, will use default
+                AddToLog($"Failed to load icon: {ex.Message}");
+            }
 
             tabControl = new TabControl();
             tabControl.Dock = DockStyle.Fill;
@@ -346,7 +390,7 @@ namespace VideoDownloader
             yPos += 290;
 
             // Additional Settings
-            var additionalGroup = new GroupBox { Text = "Additional Settings", Location = new Point(10, yPos), Size = new Size(650, 80) };
+            var additionalGroup = new GroupBox { Text = "Additional Settings", Location = new Point(10, yPos), Size = new Size(650, 110) };
             
             cookiesCheckBox = new CheckBox 
             { 
@@ -358,12 +402,40 @@ namespace VideoDownloader
             
             // Add tooltip separately
             var toolTip = new System.Windows.Forms.ToolTip();
-            toolTip.SetToolTip(cookiesCheckBox, "Uses cookies from Chrome browser for sites that require login");
+            toolTip.SetToolTip(cookiesCheckBox, "Uses cookies from selected browser for sites that require login");
+            
+            // Browser selection
+            var browserLabel = new Label
+            {
+                Text = "Browser:",
+                Location = new Point(30, 55),
+                Size = new Size(60, 20)
+            };
+            additionalGroup.Controls.Add(browserLabel);
+            
+            browserComboBox = new ComboBox
+            {
+                Location = new Point(95, 52),
+                Size = new Size(150, 25),
+                DropDownStyle = ComboBoxStyle.DropDownList
+            };
+            browserComboBox.Items.AddRange(new[] { 
+                "Chrome", 
+                "Firefox", 
+                "Edge", 
+                "Brave", 
+                "Opera", 
+                "Safari",
+                "Chromium",
+                "Vivaldi"
+            });
+            browserComboBox.SelectedIndex = 0; // Default to Chrome
+            additionalGroup.Controls.Add(browserComboBox);
             
             var cookiesNote = new Label
             {
-                Text = "Note: Make sure you're logged into the sites in Chrome browser",
-                Location = new Point(30, 50),
+                Text = "Note: Make sure you're logged into the sites in your selected browser",
+                Location = new Point(30, 80),
                 Size = new Size(400, 20),
                 ForeColor = Color.Gray,
                 Font = new Font(Label.DefaultFont.FontFamily, 8)
@@ -372,7 +444,7 @@ namespace VideoDownloader
             
             panel.Controls.Add(additionalGroup);
 
-            yPos += 100;
+            yPos += 130;
 
             // Evidence Collection Settings
             var evidenceGroup = new GroupBox { Text = "Evidence Collection", Location = new Point(10, yPos), Size = new Size(650, 120) };
@@ -410,6 +482,15 @@ namespace VideoDownloader
 
             // About section
             var aboutGroup = new GroupBox { Text = "About", Location = new Point(10, yPos), Size = new Size(650, 130) };
+            
+            // About text panel (left side)
+            var aboutPanel = new Panel
+            {
+                Location = new Point(10, 20),
+                Size = new Size(450, 100),
+                AutoScroll = true
+            };
+            
             var aboutLabel = new Label 
             { 
                 Text = "Multi-Platform Video Downloader v1.0\n" +
@@ -417,11 +498,72 @@ namespace VideoDownloader
                        "CapCut, Telegram, Spotify, SoundCloud, LinkedIn, and adult content sites\n\n" +
                        "Note: Requires yt-dlp.exe and ffmpeg.exe in the same folder as this executable.\n" +
                        "Please respect copyright and platform terms of service.",
-                Location = new Point(10, 20),
-                Size = new Size(630, 100),
+                Location = new Point(0, 0),
+                Size = new Size(440, 100),
                 AutoSize = false
             };
-            aboutGroup.Controls.Add(aboutLabel);
+            aboutPanel.Controls.Add(aboutLabel);
+            aboutGroup.Controls.Add(aboutPanel);
+            
+            // MIT License Logo (right side)
+            var mitPictureBox = new PictureBox
+            {
+                Location = new Point(470, 20),
+                Size = new Size(170, 95),
+                SizeMode = PictureBoxSizeMode.Zoom,
+                BackColor = Color.Transparent
+            };
+            
+            // Try to load the MIT logo from embedded resources
+            try
+            {
+                var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                var resourceName = "VideoDownloader.mit-license-logo.png";
+                
+                using (var stream = assembly.GetManifestResourceStream(resourceName))
+                {
+                    if (stream != null)
+                    {
+                        mitPictureBox.Image = Image.FromStream(stream);
+                    }
+                    else
+                    {
+                        // Fallback: try alternate resource name
+                        resourceName = assembly.GetName().Name + ".mit-license-logo.png";
+                        using (var altStream = assembly.GetManifestResourceStream(resourceName))
+                        {
+                            if (altStream != null)
+                            {
+                                mitPictureBox.Image = Image.FromStream(altStream);
+                            }
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // If resource loading fails, show text instead
+            }
+            
+            // If no image loaded, show text
+            if (mitPictureBox.Image == null)
+            {
+                var mitLabel = new Label
+                {
+                    Text = "@2025 MIT License",
+                    Location = new Point(470, 50),
+                    Size = new Size(170, 30),
+                    TextAlign = ContentAlignment.MiddleCenter,
+                    ForeColor = Color.FromArgb(100, 100, 100),
+                    Font = new Font("Segoe UI", 10, FontStyle.Regular)
+                };
+                aboutGroup.Controls.Add(mitLabel);
+            }
+            else
+            {
+                aboutGroup.Controls.Add(mitPictureBox);
+            }
+                        
             panel.Controls.Add(aboutGroup);
 
             tab.Controls.Add(panel);
@@ -718,7 +860,8 @@ namespace VideoDownloader
                 // These platforms often need cookies
                 if (cookiesCheckBox.Checked)
                 {
-                    arguments.Add("--cookies-from-browser chrome");
+                    var selectedBrowser = browserComboBox.SelectedItem?.ToString()?.ToLower() ?? "chrome";
+                    arguments.Add($"--cookies-from-browser {selectedBrowser}");
                 }
             }
             else if (platform == "Spotify" || platform == "SoundCloud")
@@ -901,6 +1044,7 @@ namespace VideoDownloader
                 ["metadata"] = metadataCheckBox.Checked.ToString(),
                 ["timestamp"] = timestampCheckBox.Checked.ToString(),
                 ["cookies"] = cookiesCheckBox.Checked.ToString(),
+                ["browser"] = browserComboBox.SelectedItem?.ToString() ?? "Chrome",
                 ["screenshot"] = screenshotCheckBox.Checked.ToString(),
                 ["hash"] = hashCheckBox.Checked.ToString(),
                 ["evidenceReport"] = evidenceReportCheckBox.Checked.ToString()
@@ -963,6 +1107,12 @@ namespace VideoDownloader
                     timestampCheckBox.Checked = bool.Parse(settings["timestamp"]);
                 if (settings.ContainsKey("cookies"))
                     cookiesCheckBox.Checked = bool.Parse(settings["cookies"]);
+                if (settings.ContainsKey("browser"))
+                {
+                    var browserIndex = browserComboBox.Items.IndexOf(settings["browser"]);
+                    if (browserIndex >= 0)
+                        browserComboBox.SelectedIndex = browserIndex;
+                }
                 if (settings.ContainsKey("screenshot"))
                     screenshotCheckBox.Checked = bool.Parse(settings["screenshot"]);
                 if (settings.ContainsKey("hash"))
@@ -1004,11 +1154,11 @@ namespace VideoDownloader
             {
                 var screenshotPath = Path.Combine(outputPath, $"screenshot_{DateTime.Now:yyyyMMdd_HHmmss}.png");
                 
-                // Try to find Chrome executable
-                var chromePath = FindChromeExecutable();
-                if (string.IsNullOrEmpty(chromePath))
+                // Try to find any Chromium-based browser for screenshot
+                var browserPath = FindBrowserExecutable();
+                if (string.IsNullOrEmpty(browserPath))
                 {
-                    AddToLog("Chrome not found for screenshot capture");
+                    AddToLog("No supported browser found for screenshot capture");
                     return;
                 }
                 
@@ -1016,7 +1166,7 @@ namespace VideoDownloader
                 {
                     StartInfo = new ProcessStartInfo
                     {
-                        FileName = chromePath,
+                        FileName = browserPath,
                         Arguments = $"--headless --disable-gpu --screenshot=\"{screenshotPath}\" --window-size=1920,1080 \"{url}\"",
                         UseShellExecute = false,
                         CreateNoWindow = true
@@ -1035,6 +1185,59 @@ namespace VideoDownloader
             {
                 AddToLog($"Screenshot failed: {ex.Message}");
             }
+        }
+        
+        private string FindBrowserExecutable()
+        {
+            // List of browsers that support headless screenshot mode (Chromium-based)
+            var browserPaths = new Dictionary<string, string[]>
+            {
+                ["Chrome"] = new[]
+                {
+                    @"C:\Program Files\Google\Chrome\Application\chrome.exe",
+                    @"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Google\Chrome\Application\chrome.exe")
+                },
+                ["Edge"] = new[]
+                {
+                    @"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
+                    @"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), @"Microsoft\Edge\Application\msedge.exe")
+                },
+                ["Brave"] = new[]
+                {
+                    @"C:\Program Files\BraveSoftware\Brave-Browser\Application\brave.exe",
+                    @"C:\Program Files (x86)\BraveSoftware\Brave-Browser\Application\brave.exe",
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"BraveSoftware\Brave-Browser\Application\brave.exe")
+                },
+                ["Opera"] = new[]
+                {
+                    @"C:\Program Files\Opera\launcher.exe",
+                    @"C:\Program Files (x86)\Opera\launcher.exe",
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Programs\Opera\launcher.exe")
+                },
+                ["Vivaldi"] = new[]
+                {
+                    @"C:\Program Files\Vivaldi\Application\vivaldi.exe",
+                    @"C:\Program Files (x86)\Vivaldi\Application\vivaldi.exe",
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), @"Vivaldi\Application\vivaldi.exe")
+                }
+            };
+            
+            // Try to find any available browser
+            foreach (var browser in browserPaths)
+            {
+                foreach (var path in browser.Value)
+                {
+                    if (File.Exists(path))
+                    {
+                        AddToLog($"Using {browser.Key} for screenshot");
+                        return path;
+                    }
+                }
+            }
+            
+            return null;
         }
         
         private string FindChromeExecutable()

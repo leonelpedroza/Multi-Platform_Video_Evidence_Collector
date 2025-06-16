@@ -1,5 +1,5 @@
 @echo off
-echo Building Video Downloader C# Version...
+echo Building Video Downloader C# Version (Release Mode)...
 echo.
 
 REM Check if .NET SDK is installed
@@ -21,19 +21,35 @@ REM Restore packages
 echo Restoring packages...
 dotnet restore
 
-REM Build the project
-echo Building project...
+REM Build the project in Release mode
+echo Building project in Release mode...
 dotnet build -c Release
 
-REM Publish as single file
-echo Publishing as single executable...
-dotnet publish -c Release -o publish
+REM Publish as single file with optimizations
+echo Publishing as single executable (optimized)...
+dotnet publish -c Release -o publish --self-contained true -r win-x64 ^
+    /p:PublishSingleFile=true ^
+    /p:IncludeNativeLibrariesForSelfExtract=true ^
+    /p:DebugType=none ^
+    /p:DebugSymbols=false ^
+    /p:EnableCompressionInSingleFile=true ^
+    /p:OptimizationPreference=Size
+
+if errorlevel 1 (
+    echo.
+    echo Build failed! Please check the errors above.
+    pause
+    exit /b 1
+)
+
+REM Create publish directory if it doesn't exist
+if not exist publish mkdir publish
 
 REM Download yt-dlp if not present
 if not exist "publish\yt-dlp.exe" (
     echo.
     echo Downloading yt-dlp.exe...
-    powershell -Command "Invoke-WebRequest -Uri 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe' -OutFile 'publish\yt-dlp.exe'"
+    powershell -Command "[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; try { Invoke-WebRequest -Uri 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe' -OutFile 'publish\yt-dlp.exe' } catch { Write-Host 'Failed to download yt-dlp.exe. Please download manually from: https://github.com/yt-dlp/yt-dlp/releases' }"
 )
 
 REM Create a README for the investigator
@@ -66,12 +82,21 @@ echo Note: Downloaded videos will be saved to the folder you specify.
 ) > publish\README.txt
 
 echo.
-echo Build complete!
+echo ============================================
+echo Build complete! (Release Mode - Optimized)
+echo ============================================
 echo.
 echo Output files are in: publish\
 echo - VideoDownloader.exe (Main application)
 echo - yt-dlp.exe (Download engine)
 echo - README.txt (Instructions)
+echo.
+
+REM Display file sizes
+echo File sizes:
+for %%F in (publish\VideoDownloader.exe) do echo VideoDownloader.exe: %%~zF bytes
+for %%F in (publish\yt-dlp.exe) do echo yt-dlp.exe: %%~zF bytes
+
 echo.
 echo IMPORTANT: The investigator must also have ffmpeg installed!
 echo.
